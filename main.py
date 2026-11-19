@@ -61,6 +61,18 @@ def run():
             pass
         return fail("cannot write {}: {}".format(target, exc))
 
+    # Read the finished file back and compare it with the source bytes,
+    # so a short write or a disk error is reported instead of silently
+    # shipping a corrupt entry.
+    try:
+        with open(target, "rb") as handle:
+            written = handle.read()
+    except OSError as exc:
+        return fail("cannot read back {}: {}".format(target, exc))
+    if written != image:
+        return fail("{} differs from {} after copying".format(target, source))
+
+    print("wrote {} ({} bytes)".format(target, len(image)))
     return 0
 
 
